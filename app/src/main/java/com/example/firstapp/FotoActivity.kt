@@ -4,11 +4,9 @@ package com.example.firstapp
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Environment
-import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.fotoapparat.Fotoapparat
@@ -16,11 +14,13 @@ import io.fotoapparat.configuration.CameraConfiguration
 import io.fotoapparat.log.logcat
 import io.fotoapparat.log.loggers
 import io.fotoapparat.parameter.ScaleType
-import io.fotoapparat.selector.*
+import io.fotoapparat.selector.back
+import io.fotoapparat.selector.front
+import io.fotoapparat.selector.off
+import io.fotoapparat.selector.torch
 import io.fotoapparat.view.CameraView
 import kotlinx.android.synthetic.main.activity_foto.*
 import java.io.File
-
 
 
 class FotoActivity : AppCompatActivity() {
@@ -29,11 +29,15 @@ class FotoActivity : AppCompatActivity() {
     private val filename = "test.png"
     private val sd = Environment.getExternalStorageDirectory()
     private val dest = File(sd, filename)
-    private var fotoapparatState : FotoapparatState? = null
-    private var cameraStatus : CameraState? = null
+    private var fotoapparatState: FotoapparatState? = null
+    private var cameraStatus: CameraState? = null
     private var flashState: FlashState? = null
 
-    private val permissions = arrayOf(android.Manifest.permission.CAMERA, android.Manifest.permission.WRITE_EXTERNAL_STORAGE, android.Manifest.permission.READ_EXTERNAL_STORAGE)
+    private val permissions = arrayOf(
+        Manifest.permission.CAMERA,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        Manifest.permission.READ_EXTERNAL_STORAGE
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,7 +62,7 @@ class FotoActivity : AppCompatActivity() {
         }
     }
 
-    private fun createFotoapparat(){
+    private fun createFotoapparat() {
         val cameraView = findViewById<CameraView>(R.id.camera_view)
 
         fotoapparat = Fotoapparat(
@@ -78,28 +82,28 @@ class FotoActivity : AppCompatActivity() {
     private fun changeFlashState() {
         fotoapparat?.updateConfiguration(
             CameraConfiguration(
-                flashMode = if(flashState == FlashState.TORCH) off() else torch()
+                flashMode = if (flashState == FlashState.TORCH) off() else torch()
             )
         )
 
-        flashState = if(flashState == FlashState.TORCH) FlashState.OFF
+        flashState = if (flashState == FlashState.TORCH) FlashState.OFF
         else FlashState.TORCH
     }
 
     private fun switchCamera() {
         fotoapparat?.switchTo(
-            lensPosition =  if (cameraStatus == CameraState.BACK) front() else back(),
+            lensPosition = if (cameraStatus == CameraState.BACK) front() else back(),
             cameraConfiguration = CameraConfiguration()
         )
 
-        cameraStatus = if(cameraStatus == CameraState.BACK) CameraState.FRONT
+        cameraStatus = if (cameraStatus == CameraState.BACK) CameraState.FRONT
         else CameraState.BACK
     }
 
     private fun takePhoto() {
         if (hasNoPermissions()) {
             requestPermission()
-        }else{
+        } else {
             fotoapparat
                 ?.takePicture()
                 ?.saveToFile(dest)
@@ -110,21 +114,27 @@ class FotoActivity : AppCompatActivity() {
         super.onStart()
         if (hasNoPermissions()) {
             requestPermission()
-        }else{
+        } else {
             fotoapparat?.start()
             fotoapparatState = FotoapparatState.ON
         }
     }
 
-    private fun hasNoPermissions(): Boolean{
-        return ContextCompat.checkSelfPermission(this,
-            Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this,
-            Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
+    private fun hasNoPermissions(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        ) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        ) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.CAMERA
+        ) != PackageManager.PERMISSION_GRANTED
     }
 
-    private fun requestPermission(){
-        ActivityCompat.requestPermissions(this, permissions,0)
+    private fun requestPermission() {
+        ActivityCompat.requestPermissions(this, permissions, 0)
     }
 
     override fun onStop() {
@@ -135,7 +145,7 @@ class FotoActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if(!hasNoPermissions() && fotoapparatState == FotoapparatState.OFF){
+        if (!hasNoPermissions() && fotoapparatState == FotoapparatState.OFF) {
             val intent = Intent(baseContext, MainActivity::class.java)
             startActivity(intent)
             finish()
@@ -144,14 +154,14 @@ class FotoActivity : AppCompatActivity() {
 
 }
 
-enum class CameraState{
+enum class CameraState {
     FRONT, BACK
 }
 
-enum class FlashState{
+enum class FlashState {
     TORCH, OFF
 }
 
-enum class FotoapparatState{
+enum class FotoapparatState {
     ON, OFF
 }
